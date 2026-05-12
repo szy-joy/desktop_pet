@@ -9,6 +9,26 @@ export default function App() {
   const [showPanel, setShowPanel] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // 控制 Electron 鼠标穿透
+  const updateMouseIgnore = (ignore: boolean) => {
+    if ((window as any).require) {
+      try {
+        const { ipcRenderer } = (window as any).require('electron');
+        ipcRenderer.send('set-ignore-mouse-events', ignore, { forward: true });
+      } catch (e) { /* ignore */ }
+    }
+  };
+
+  const handleOpenPanel = () => {
+    setShowPanel(true);
+    updateMouseIgnore(false);
+  };
+
+  const handleClosePanel = () => {
+    setShowPanel(false);
+    updateMouseIgnore(true);
+  };
+
   const fetchConfig = useCallback(async () => {
     try {
       const res = await fetch('/api/config');
@@ -57,7 +77,7 @@ export default function App() {
       {/* Desktop Pet Container */}
       <DesktopPet 
         config={config} 
-        onOpenPanel={() => setShowPanel(true)} 
+        onOpenPanel={handleOpenPanel} 
       />
 
       {/* Control Panel Modal */}
@@ -65,7 +85,7 @@ export default function App() {
         <ControlPanel 
           config={config} 
           onSave={saveConfig} 
-          onClose={() => setShowPanel(false)} 
+          onClose={handleClosePanel} 
         />
       )}
     </div>

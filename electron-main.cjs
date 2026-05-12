@@ -25,25 +25,33 @@ function startServer() {
 }
 
 function createWindow() {
-  const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
 
   mainWindow = new BrowserWindow({
-    width: 400,
-    height: 400,
-    x: screenWidth - 450,
-    y: screenHeight - 450,
+    width: screenWidth,
+    height: screenHeight,
+    x: 0,
+    y: 0,
     transparent: true,
     frame: false,
     alwaysOnTop: true,
-    resizable: true,
+    resizable: false, // 全屏模式下不需要缩放
     hasShadow: false,
+    skipTaskbar: true, // 可选：不在任务栏显示
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
     },
   });
 
-  // 加载本地运行的服务器地址
+  // 处理鼠标穿透逻辑
+  // 当渲染进程发送指令时，控制窗口是否忽略鼠标事件
+  const { ipcMain } = require('electron');
+  ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
+    mainWindow.setIgnoreMouseEvents(ignore, options);
+  });
+
   mainWindow.loadURL('http://localhost:3000');
 
   // 允许窗口在所有工作区显示 (macOS)

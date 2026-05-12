@@ -69,17 +69,37 @@ export default function DesktopPet({ config, onOpenPanel }: DesktopPetProps) {
     onOpenPanel();
   };
 
+  // 控制 Electron 鼠标穿透
+  const updateMouseIgnore = (ignore: boolean) => {
+    if ((window as any).require) {
+      try {
+        const { ipcRenderer } = (window as any).require('electron');
+        ipcRenderer.send('set-ignore-mouse-events', ignore, { forward: true });
+      } catch (e) { /* ignore */ }
+    }
+  };
+
   return (
     <div className="fixed inset-0 pointer-events-none z-10">
       <motion.div
         drag
         dragMomentum={false}
         initial={position}
-        onDragEnd={(_, info) => setPosition({ x: info.point.x, y: info.point.y })}
+        onDragStart={() => updateMouseIgnore(false)}
+        onDragEnd={(_, info) => {
+          setPosition({ x: info.point.x, y: info.point.y });
+          updateMouseIgnore(false);
+        }}
         className="absolute pointer-events-auto cursor-grab active:cursor-grabbing group"
         onContextMenu={handleContextMenu}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={() => {
+          setIsHovered(true);
+          updateMouseIgnore(false);
+        }}
+        onMouseLeave={() => {
+          setIsHovered(false);
+          updateMouseIgnore(true);
+        }}
         style={{ width: config.appearance.size, height: config.appearance.size }}
       >
         {/* Interaction Buttons (Hover) */}
