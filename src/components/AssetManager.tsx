@@ -36,7 +36,10 @@ export default function AssetManager({ config, onUpdate }: AssetManagerProps) {
       } else {
         const text = await res.text();
         console.error('Non-JSON response received:', text);
-        throw new Error(`Server returned non-JSON response (${res.status})`);
+        if (text.includes('Cookie check')) {
+          throw new Error('检测到环境认证问题。请刷新预览窗口，或在工具栏中点击“刷新”按钮。');
+        }
+        throw new Error(`服务器返回了非 JSON 响应 (${res.status})。请检查服务器状态。`);
       }
 
       const newAsset: Asset = {

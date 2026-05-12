@@ -23,4 +23,5 @@ export interface AppConfig {
   appearance: {
     size: number;
   };
+  affectionScore: number;
 }

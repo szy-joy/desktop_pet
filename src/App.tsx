@@ -35,6 +35,10 @@ export default function App() {
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const contentType = res.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
+        const text = await res.text();
+        if (text.includes('Cookie check')) {
+          console.error('Environment auth issue detected');
+        }
         throw new Error('Server returned non-JSON for config');
       }
       const data = await res.json();
@@ -78,6 +82,7 @@ export default function App() {
       <DesktopPet 
         config={config} 
         onOpenPanel={handleOpenPanel}
+        onUpdateConfig={saveConfig}
         isPanelOpen={showPanel}
       />
 

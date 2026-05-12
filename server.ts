@@ -26,17 +26,53 @@ async function startServer() {
     ],
     currentAssetId: 'default',
     buttons: [
-      { id: 'pet', emoji: '👋', name: '摸摸', response: '猫猫发出了呼噜声~', mode: 'text', actionAsset: '', duration: 2 },
-      { id: 'tease', emoji: '🎾', name: '逗它', response: '猫猫兴奋地扑了过来！', mode: 'text', actionAsset: '', duration: 2 }
+      { id: 'eat', emoji: '🍜', name: '吃饭', response: '猫猫吃得真香~', mode: 'text', actionAsset: '', duration: 2 },
+      { id: 'daze', emoji: '😶', name: '发呆', response: '猫猫正在思考猫生...', mode: 'text', actionAsset: '', duration: 3 },
+      { id: 'sleep', emoji: '😴', name: '睡觉', response: '嘘，猫猫睡着了。', mode: 'text', actionAsset: '', duration: 5 },
+      { id: 'exercise', emoji: '🤸', name: '做操', response: '猫猫正在努力锻炼！', mode: 'text', actionAsset: '', duration: 2 },
+      { id: 'pomodoro', emoji: '⏱️', name: '小猫监工', response: '', mode: 'text', actionAsset: '', duration: 0 },
     ],
-    idleMessages: ['喵~ 肚子饿了', '该铲屎了', '今天天气不错', '想睡觉了...'],
+    idleMessages: ['喵~ 肚子饿了', '该铲屎了', '今天天气不错', '想睡觉了...', '要记得多喝水哦', '工作辛苦啦'],
     appearance: {
       size: 260
-    }
+    },
+    affectionScore: 20
   };
+
+  // Helper to detect if we should force update old configs (versioning)
+  const CONFIG_VERSION = 3;
+  const configVersionFile = path.join(userDataPath, 'version.json');
+  
+  if (fs.existsSync(configFile)) {
+    // Check version
+    let currentVersion = 1;
+    if (fs.existsSync(configVersionFile)) {
+      currentVersion = JSON.parse(fs.readFileSync(configVersionFile, 'utf-8')).version;
+    }
+
+    if (currentVersion < CONFIG_VERSION) {
+      console.log('Detected old config version, updating defaults...');
+      const existingConfig = JSON.parse(fs.readFileSync(configFile, 'utf-8'));
+      
+      // Update buttons if they were using old version 1 defaults
+      const isOriginalButtons = existingConfig.buttons?.length === 2 && existingConfig.buttons[0]?.id === 'pet';
+      if (isOriginalButtons) {
+        existingConfig.buttons = defaultConfig.buttons;
+      }
+
+      // Add affectionScore if missing
+      if (existingConfig.affectionScore === undefined) {
+        existingConfig.affectionScore = 20;
+      }
+
+      fs.writeFileSync(configFile, JSON.stringify(existingConfig, null, 2));
+      fs.writeFileSync(configVersionFile, JSON.stringify({ version: CONFIG_VERSION }));
+    }
+  }
 
   if (!fs.existsSync(configFile)) {
     fs.writeFileSync(configFile, JSON.stringify(defaultConfig, null, 2));
+    fs.writeFileSync(configVersionFile, JSON.stringify({ version: CONFIG_VERSION }));
   }
 
   // --- API Routes ---
