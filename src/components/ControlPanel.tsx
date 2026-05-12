@@ -59,8 +59,21 @@ export default function ControlPanel({ config, onSave, onClose }: ControlPanelPr
               })}
             </nav>
 
-            <div className="mt-auto p-4 border-t border-slate-200 text-[10px] text-slate-400">
-              Connected to: cat-render-engine-v1
+            <div className="mt-auto border-t border-slate-200">
+              <button 
+                onClick={() => {
+                  if (window.confirm('确定要退出猫猫吗？')) {
+                    window.close();
+                  }
+                }}
+                className="w-full flex items-center gap-3 px-6 py-4 text-sm font-semibold text-red-500 hover:bg-red-50 transition-all"
+              >
+                <span className="text-lg leading-none">🚪</span>
+                <span>退出软件</span>
+              </button>
+              <div className="p-4 pt-1 text-[10px] text-slate-400">
+                Connected to: cat-render-engine-v1
+              </div>
             </div>
           </div>
 
