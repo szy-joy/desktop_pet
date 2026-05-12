@@ -5,9 +5,10 @@ import { AppConfig, InteractionButton, Asset } from '../types';
 interface DesktopPetProps {
   config: AppConfig;
   onOpenPanel: () => void;
+  isPanelOpen?: boolean;
 }
 
-export default function DesktopPet({ config, onOpenPanel }: DesktopPetProps) {
+export default function DesktopPet({ config, onOpenPanel, isPanelOpen }: DesktopPetProps) {
   const [position, setPosition] = useState({ x: window.innerWidth - 300, y: window.innerHeight - 300 });
   const [bubbleText, setBubbleText] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -98,7 +99,9 @@ export default function DesktopPet({ config, onOpenPanel }: DesktopPetProps) {
         }}
         onMouseLeave={() => {
           setIsHovered(false);
-          updateMouseIgnore(true);
+          if (!isPanelOpen) {
+            updateMouseIgnore(true);
+          }
         }}
         style={{ width: config.appearance.size, height: config.appearance.size }}
       >

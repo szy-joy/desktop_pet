@@ -25,7 +25,17 @@ export default function ControlPanel({ config, onSave, onClose }: ControlPanelPr
   ];
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm z-[100] p-4">
+    <div 
+      className="fixed inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm z-[100] p-4"
+      onMouseEnter={() => {
+        if ((window as any).require) {
+          try {
+            const { ipcRenderer } = (window as any).require('electron');
+            ipcRenderer.send('set-ignore-mouse-events', false, { forward: true });
+          } catch (e) {}
+        }
+      }}
+    >
       <div 
         className="bg-slate-50 rounded-xl shadow-2xl overflow-hidden flex flex-col border border-slate-200"
         style={{ width: 680, height: 700 }}

@@ -77,7 +77,8 @@ export default function App() {
       {/* Desktop Pet Container */}
       <DesktopPet 
         config={config} 
-        onOpenPanel={handleOpenPanel} 
+        onOpenPanel={handleOpenPanel}
+        isPanelOpen={showPanel}
       />
 
       {/* Control Panel Modal */}
