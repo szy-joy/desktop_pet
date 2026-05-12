@@ -6,9 +6,15 @@ let mainWindow;
 let serverProcess;
 
 function startServer() {
-  // 启动我们的 Express 服务器
-  // 在开发环境下使用 tsx，打包后使用 node
+  // 如果是开发环境，服务器已经由 npm run dev 启动了，我们不需要再启动
+  if (!app.isPackaged) {
+    console.log('Running in development mode, skipping internal server start.');
+    return;
+  }
+
+  // 生产环境下启动服务器
   const serverPath = path.join(__dirname, 'server.ts');
+  console.log(`Starting production server at: ${serverPath}`);
   
   serverProcess = spawn('npx', ['tsx', serverPath], {
     env: { ...process.env, NODE_ENV: 'production', PORT: '3000' },
@@ -36,9 +42,9 @@ function createWindow() {
     transparent: true,
     frame: false,
     alwaysOnTop: true,
-    resizable: false, // 全屏模式下不需要缩放
+    resizable: false,
     hasShadow: false,
-    skipTaskbar: true, // 可选：不在任务栏显示
+    skipTaskbar: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -46,16 +52,18 @@ function createWindow() {
   });
 
   // 处理鼠标穿透逻辑
-  // 当渲染进程发送指令时，控制窗口是否忽略鼠标事件
   const { ipcMain } = require('electron');
   ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
-    mainWindow.setIgnoreMouseEvents(ignore, options);
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win) {
+      win.setIgnoreMouseEvents(ignore, options);
+    }
   });
 
   mainWindow.loadURL('http://localhost:3000');
 
-  // 允许窗口在所有工作区显示 (macOS)
-  mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  // 默认开启鼠标穿透（因为全屏透明窗口会挡住桌面）
+  mainWindow.setIgnoreMouseEvents(true, { forward: true });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -64,8 +72,9 @@ function createWindow() {
 
 app.whenReady().then(() => {
   startServer();
-  // 给服务器一点启动时间
-  setTimeout(createWindow, 2000);
+  // 开发模式下延迟小一点
+  const delay = app.isPackaged ? 2000 : 500;
+  setTimeout(createWindow, delay);
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
