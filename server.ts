@@ -14,10 +14,32 @@ async function startServer() {
 
   const userDataPath = path.join(process.cwd(), 'userData');
   const uploadsPath = path.join(process.cwd(), 'uploads');
+  const songsPath = path.join(process.cwd(), 'songs');
   const configFile = path.join(userDataPath, 'config.json');
 
   if (!fs.existsSync(userDataPath)) fs.mkdirSync(userDataPath);
   if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath);
+  if (!fs.existsSync(songsPath)) fs.mkdirSync(songsPath);
+
+  // Helper to get songs from the songs directory
+  const getSongsFromLocal = () => {
+    if (!fs.existsSync(songsPath)) return [];
+    try {
+      return fs.readdirSync(songsPath)
+        .filter(file => /\.(mp3|wav|ogg|m4a)$/i.test(file))
+        .map(file => ({
+          id: `local-song-${file}`,
+          name: file,
+          url: `/songs/${encodeURIComponent(file)}`,
+          type: 'audio' as const
+        }));
+    } catch (err) {
+      console.error('Error scanning songs directory:', err);
+      return [];
+    }
+  };
+
+  const localSongs = getSongsFromLocal();
 
   // Default config
   const defaultConfig = {
@@ -30,6 +52,7 @@ async function startServer() {
       { id: 'daze2', name: '发呆2', url: '/gif/发呆2.gif', type: 'image' },
       { id: 'sleep1', name: '睡觉', url: '/gif/睡觉.gif', type: 'image' },
       { id: 'exercise1', name: '做操', url: '/gif/做操.gif', type: 'image' },
+      ...localSongs
     ],
     currentAssetId: 'idle1',
     buttons: [
@@ -37,17 +60,18 @@ async function startServer() {
       { id: 'daze', emoji: '😶', name: '发呆', response: '猫猫正在思考猫生...', mode: 'action', assetIds: ['daze1', 'daze2'], duration: 8 },
       { id: 'sleep', emoji: '😴', name: '睡觉', response: '嘘，猫猫睡着了。', mode: 'action', assetIds: ['sleep1'], duration: 8 },
       { id: 'exercise', emoji: '🤸', name: '做操', response: '猫猫正在努力锻炼！', mode: 'action', assetIds: ['exercise1'], duration: 8 },
-      { id: 'sing', emoji: '🎤', name: '唱歌', response: '猫猫开始大灌篮了... 哦不，是大展歌喉！', mode: 'action', assetIds: [], audioIds: [], duration: 0 },
+      { id: 'sing', emoji: '🎤', name: '唱歌', response: '猫猫开始大灌篮了... 哦不，是大展歌喉！', mode: 'action', assetIds: [], audioIds: localSongs.map(s => s.id), duration: 0 },
       { id: 'pomodoro', emoji: '⏱️', name: '小猫监工', response: '', mode: 'text', assetIds: [], duration: 0 },
     ],
     idleMessages: ['喵~ 肚子饿了', '该铲屎了', '今天天气不错', '想睡觉了...', '要记得多喝水哦', '工作辛苦啦'],
     appearance: {
       size: 260
-    }
+    },
+    petName: '小猫'
   };
 
   // Helper to detect if we should force update old configs (versioning)
-  const CONFIG_VERSION = 8;
+  const CONFIG_VERSION = 10;
   const configVersionFile = path.join(userDataPath, 'version.json');
   
   if (fs.existsSync(configFile)) {
@@ -81,6 +105,47 @@ async function startServer() {
             b.id === 'sing' ? { ...b, duration: 0 } : b
           );
         }
+      }
+
+      // v9 migration: add petName if missing
+      if (currentVersion < 9) {
+        if (!existingConfig.petName) {
+          existingConfig.petName = '小猫';
+        }
+        // Also update the 'pomodoro' button name if it's currently '小猫监工'
+        existingConfig.buttons = existingConfig.buttons.map((b: any) => 
+          b.id === 'pomodoro' && (b.name === '小猫监工' || b.name === '大郎监工') 
+            ? { ...b, name: `${existingConfig.petName}监工` } 
+            : b
+        );
+      }
+
+      // v10 migration: Scan for local songs and add them as assets
+      if (currentVersion < 10) {
+        const currentAssets = existingConfig.assets || [];
+        const currentAssetUrls = new Set(currentAssets.map((a: any) => a.url));
+        
+        // Add new local songs to assets if not already there
+        localSongs.forEach(song => {
+          if (!currentAssetUrls.has(song.url)) {
+            currentAssets.push(song);
+          }
+        });
+        existingConfig.assets = currentAssets;
+
+        // Add local song IDs to the 'sing' button's audioIds
+        existingConfig.buttons = existingConfig.buttons.map((b: any) => {
+          if (b.id === 'sing') {
+            const currentAudioIds = b.audioIds || [];
+            localSongs.forEach(song => {
+              if (!currentAudioIds.includes(song.id)) {
+                currentAudioIds.push(song.id);
+              }
+            });
+            return { ...b, audioIds: currentAudioIds };
+          }
+          return b;
+        });
       }
 
       fs.writeFileSync(configFile, JSON.stringify(existingConfig, null, 2));
@@ -174,6 +239,7 @@ async function startServer() {
 
   // Static uploads
   app.use('/gif', express.static(path.join(process.cwd(), 'gif')));
+  app.use('/songs', express.static(path.join(process.cwd(), 'songs')));
   app.use('/uploads', express.static(uploadsPath));
 
   // Vite middleware

@@ -91,7 +91,7 @@ export default function ControlPanel({ config, onSave, onClose }: ControlPanelPr
             <div className="mt-auto border-t border-slate-200">
               <button 
                 onClick={() => {
-                  if (window.confirm('确定要跟小猫拜拜吗？')) {
+                  if (window.confirm(`确定要和${config.petName || '猫猫'}说拜拜吗？`)) {
                     window.close();
                   }
                 }}

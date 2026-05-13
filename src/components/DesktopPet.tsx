@@ -289,10 +289,12 @@ export default function DesktopPet({ config, onOpenPanel, onUpdateConfig, isPane
     
     setHistory(prev => [...prev, { buttonId: btn.id, timestamp: now }]);
 
-    // Stop singing if starting any other interaction
+    // Stop singing IF desired - but user wants music to PERSIST now
+    /* 
     if (btn.id !== 'sing') {
       stopSinging();
     }
+    */
 
     // Clear interaction state
     if (interactionTimeoutRef.current) {
@@ -419,10 +421,18 @@ export default function DesktopPet({ config, onOpenPanel, onUpdateConfig, isPane
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               style={{ width: config.appearance.size }}
-              className="absolute left-1/2 -translate-x-1/2 bottom-1 flex flex-col z-40 pointer-events-auto overflow-hidden rounded-lg shadow-lg border border-white/20 ring-1 ring-black/5"
+              className="absolute left-1/2 -translate-x-1/2 bottom-1 flex flex-col z-40 pointer-events-auto rounded-lg shadow-lg border border-white/20 ring-1 ring-black/5 group/music"
             >
+               {/* Close Button (Hover) */}
+               <button 
+                 onClick={(e) => { e.stopPropagation(); stopSinging(); }}
+                 className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[calc(100%+4px)] z-50 p-1 bg-black/20 hover:bg-black/40 text-white rounded-full opacity-0 group-hover/music:opacity-100 transition-all backdrop-blur-sm shadow-sm"
+               >
+                 <X size={10} />
+               </button>
+
                {/* Main Compact Interface */}
-               <div className="flex items-center px-2 py-1 bg-white/40 backdrop-blur-md gap-3 h-8">
+               <div className="flex items-center px-2 py-1 bg-white/40 backdrop-blur-md gap-3 h-8 rounded-t-lg">
                   {/* Song Title & Progress */}
                   <div className="flex-1 min-w-0 flex flex-col justify-center">
                     <span className="text-[10px] font-bold text-slate-900 truncate block leading-tight">
@@ -452,7 +462,7 @@ export default function DesktopPet({ config, onOpenPanel, onUpdateConfig, isPane
                </div>
 
                {/* Custom Filled Progress Bar (No Thumb) */}
-               <div className="relative h-1 bg-white/20 backdrop-blur-md">
+               <div className="relative h-1 bg-white/20 backdrop-blur-md rounded-b-lg overflow-hidden">
                   {/* Filled part */}
                   <div 
                     className="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-300 ease-linear shadow-[0_0_8px_rgba(59,130,246,0.5)]"
@@ -496,7 +506,7 @@ export default function DesktopPet({ config, onOpenPanel, onUpdateConfig, isPane
                   }}
                   className="px-3 py-1 bg-red-500/90 hover:bg-red-600 text-white rounded-full text-[10px] font-bold shadow-lg transition-all scale-90 hover:scale-100"
                 >
-                  结束监工
+                  结束{config.petName || '宠物'}监工
                 </button>
               )}
             </motion.div>
@@ -530,7 +540,7 @@ export default function DesktopPet({ config, onOpenPanel, onUpdateConfig, isPane
                 onClick={(e) => e.stopPropagation()}
                 className="absolute inset-4 bg-white rounded-xl shadow-2xl flex flex-col items-center justify-center p-4 gap-4 z-[60] border border-slate-200"
               >
-                <div className="text-sm font-bold text-slate-800">设置监工时长</div>
+                <div className="text-sm font-bold text-slate-800">设置{config.petName || '宠物'}监工时长</div>
                 <div className="flex items-center gap-3">
                   <button onClick={() => setPomodoroDuration(prev => Math.max(5, prev - 5))} className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600">-</button>
                   <span className="text-2xl font-mono font-bold text-slate-800 w-12 text-center">{pomodoroDuration}</span>

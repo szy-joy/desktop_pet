@@ -17,14 +17,40 @@ export default function AppearanceSettings({ config, onUpdate }: AppearanceSetti
     });
   };
 
+  const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value;
+    // Also auto-update the pomodoro button name if it follows the pattern
+    const updatedButtons = config.buttons.map(b => 
+      b.id === 'pomodoro' ? { ...b, name: `${newName}监工` } : b
+    );
+    
+    onUpdate({
+      ...config,
+      petName: newName,
+      buttons: updatedButtons
+    });
+  };
+
   return (
     <div className="space-y-8">
       <div>
         <h3 className="text-lg font-bold text-gray-800">显示</h3>
-        <p className="text-xs text-gray-500">调整大郎在桌面上的显示尺寸</p>
+        <p className="text-xs text-gray-500">调整宠物在桌面上的显示尺寸与命名</p>
       </div>
 
       <div className="space-y-6">
+        <div className="space-y-3">
+          <label className="text-sm font-bold text-slate-700">宠物命名</label>
+          <input 
+            type="text"
+            value={config.petName || ''}
+            onChange={handleNameChange}
+            placeholder="给它起个名字吧..."
+            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm font-medium"
+          />
+          <p className="text-[10px] text-slate-400">命名后，“监工”等功能名也会随之变化哦</p>
+        </div>
+
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <label className="text-sm font-bold text-slate-700">显示大小</label>
@@ -57,7 +83,7 @@ export default function AppearanceSettings({ config, onUpdate }: AppearanceSetti
             💡 小贴士
           </h4>
           <p className="text-[11px] text-slate-600 leading-relaxed">
-            你可以直接拖动大郎到屏幕的任何位置。右键点击也会快速呼出这个控制面板。
+            你可以直接拖动它到屏幕的任何位置。右键点击也会快速呼出这个控制面板。
           </p>
         </div>
       </div>

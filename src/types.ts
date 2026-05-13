@@ -24,4 +24,5 @@ export interface AppConfig {
   appearance: {
     size: number;
   };
+  petName: string;
 }

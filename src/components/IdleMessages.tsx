@@ -35,7 +35,7 @@ export default function IdleMessages({ config, onUpdate }: IdleMessagesProps) {
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-bold text-gray-800">互动台词</h3>
-        <p className="text-xs text-gray-500">大郎会在闲置时随机说出的话</p>
+        <p className="text-xs text-gray-500">闲置时随机说出的话</p>
       </div>
 
       <div className="flex gap-2">
@@ -43,7 +43,7 @@ export default function IdleMessages({ config, onUpdate }: IdleMessagesProps) {
           type="text" 
           value={newMsg}
           onChange={e => setNewMsg(e.target.value)}
-          placeholder="给猫猫加点戏..."
+          placeholder={`给${config.petName || '猫猫'}加点戏`}
           className="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
           onKeyDown={e => e.key === 'Enter' && addMsg()}
         />
