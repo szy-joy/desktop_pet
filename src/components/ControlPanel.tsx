@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Images, MousePointer2, MessageSquare, Settings2 } from 'lucide-react';
+import { motion } from 'motion/react';
 import { AppConfig } from '../types';
 import AssetManager from './AssetManager';
 import InteractionSettings from './InteractionSettings';
@@ -24,31 +25,44 @@ export default function ControlPanel({ config, onSave, onClose }: ControlPanelPr
     { id: 'appearance', label: '显示', icon: '📺' },
   ];
 
+  // 控制 Electron 鼠标穿透
+  const updateMouseIgnore = (ignore: boolean) => {
+    if ((window as any).require) {
+      try {
+        const { ipcRenderer } = (window as any).require('electron');
+        ipcRenderer.send('set-ignore-mouse-events', ignore, { forward: true });
+      } catch (e) { /* ignore */ }
+    }
+  };
+
+  // Initialize mouse pass-through on mount
+  useEffect(() => {
+    updateMouseIgnore(true);
+    // Restore on unmount
+    return () => updateMouseIgnore(true);
+  }, []);
+
   return (
     <div 
       className="fixed inset-0 flex items-center justify-center z-[100] p-4 pointer-events-none"
     >
       {/* Semi-transparent backdrop that doesn't block OS windows */}
-      <div 
-        className="absolute inset-0 bg-black/10 pointer-events-none" 
-      />
+      <div className="absolute inset-0 bg-black/5 pointer-events-none" />
       
-      <div 
+      <motion.div 
+        drag
+        dragMomentum={false}
         className="bg-slate-50 rounded-xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 pointer-events-auto relative"
         style={{ width: 580, height: 600 }}
-        onMouseEnter={() => {
-          if ((window as any).require) {
-            try {
-              const { ipcRenderer } = (window as any).require('electron');
-              ipcRenderer.send('set-ignore-mouse-events', false);
-            } catch (e) {}
-          }
-        }}
+        onMouseEnter={() => updateMouseIgnore(false)}
+        onMouseLeave={() => updateMouseIgnore(true)}
       >
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar Tabs */}
           <div className="w-[140px] bg-slate-100 border-r border-slate-200 py-6 flex flex-col overflow-hidden">
-            <div className="px-4 mb-6 text-left shrink-0">
+            <div 
+              className="px-4 mb-6 text-left shrink-0 select-none cursor-default"
+            >
               <div className="text-blue-600 font-bold text-lg tracking-tight italic">专属巨星</div>
               <div className="text-[9px] text-slate-400 uppercase tracking-widest">v2.4.0</div>
             </div>
@@ -113,7 +127,7 @@ export default function ControlPanel({ config, onSave, onClose }: ControlPanelPr
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
