@@ -13,11 +13,16 @@ function startServer() {
   }
 
   // 生产环境下启动服务器
-  const serverPath = path.join(__dirname, 'server.ts');
+  const serverPath = path.join(__dirname, 'dist', 'server.cjs');
   console.log(`Starting production server at: ${serverPath}`);
   
-  serverProcess = spawn('npx', ['tsx', serverPath], {
-    env: { ...process.env, NODE_ENV: 'production', PORT: '3000' },
+  serverProcess = spawn('node', [serverPath], {
+    env: { 
+      ...process.env, 
+      NODE_ENV: 'production', 
+      PORT: '3000',
+      ELECTRON_USER_DATA_PATH: app.getPath('userData')
+    },
     shell: true
   });
 
