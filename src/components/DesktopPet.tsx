@@ -405,7 +405,7 @@ export default function DesktopPet({ config, onOpenPanel, onUpdateConfig, isPane
               initial={{ opacity: 0, y: (position.y < 120) ? -10 : 10, scale: 0.8 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              className={`absolute ${position.y < 120 ? 'top-full mt-4' : 'bottom-full mb-4'} left-1/2 -translate-x-1/2 px-3 py-1.5 bg-white/95 backdrop-blur-sm border-2 border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.1)] rounded-xl text-slate-800 text-[11px] font-bold whitespace-nowrap z-30 flex items-center justify-center`}
+              className={`absolute ${position.y < 120 ? 'top-full mt-4' : (pomodoroTime > 0 ? 'bottom-full mb-[52px]' : 'bottom-full mb-4')} left-1/2 -translate-x-1/2 px-3 py-1.5 bg-white/95 backdrop-blur-sm border-2 border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.1)] rounded-xl text-slate-800 text-[11px] font-bold whitespace-nowrap z-30 flex items-center justify-center transition-all duration-300`}
             >
               {bubbleText}
               <div className={`absolute left-1/2 -translate-x-1/2 w-3 h-3 bg-white/95 rotate-45 border-slate-100 ${position.y < 120 ? '-top-[7px] border-l-2 border-t-2' : '-bottom-[7px] border-r-2 border-b-2'}`} />
@@ -487,17 +487,12 @@ export default function DesktopPet({ config, onOpenPanel, onUpdateConfig, isPane
         <AnimatePresence>
           {pomodoroTime > 0 && (
             <motion.div
-              initial={{ opacity: 0, y: (position.y < window.innerHeight / 2) ? -10 : 10 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className={`absolute left-1/2 -translate-x-1/2 ${position.y < window.innerHeight / 2 ? 'top-full mt-2' : 'bottom-full mb-2'} 
-                flex flex-col items-center gap-1 min-w-[120px] pointer-events-auto`}
+              className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 flex flex-col items-center gap-1 min-w-[120px] pointer-events-auto group/pomodoro"
             >
-              <div className="bg-slate-800/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border border-slate-700/50 flex flex-col items-center">
-                <div className="text-xl font-mono font-bold text-white leading-none">{formatTime(pomodoroTime)}</div>
-              </div>
-              
-              {isHovered && (
+              <div className="opacity-0 group-hover/pomodoro:opacity-100 transition-all duration-200">
                 <button 
                   onClick={(e) => { 
                     e.stopPropagation(); 
@@ -508,7 +503,11 @@ export default function DesktopPet({ config, onOpenPanel, onUpdateConfig, isPane
                 >
                   结束{config.petName || '宠物'}监工
                 </button>
-              )}
+              </div>
+
+              <div className="bg-slate-800/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border border-slate-700/50 flex flex-col items-center">
+                <div className="text-xl font-mono font-bold text-white leading-none">{formatTime(pomodoroTime)}</div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
