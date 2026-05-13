@@ -419,40 +419,40 @@ export default function DesktopPet({ config, onOpenPanel, onUpdateConfig, isPane
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               style={{ width: config.appearance.size }}
-              className="absolute left-1/2 -translate-x-1/2 top-full mt-1 flex flex-col z-40 pointer-events-auto overflow-hidden rounded-lg shadow-xl border border-white/40 ring-1 ring-black/5"
+              className="absolute left-1/2 -translate-x-1/2 bottom-1 flex flex-col z-40 pointer-events-auto overflow-hidden rounded-lg shadow-lg border border-white/20 ring-1 ring-black/5"
             >
                {/* Main Compact Interface */}
-               <div className="flex items-center px-2 py-1 bg-white/70 backdrop-blur-xl gap-3 h-9">
+               <div className="flex items-center px-2 py-1 bg-white/40 backdrop-blur-md gap-3 h-8">
                   {/* Song Title & Progress */}
                   <div className="flex-1 min-w-0 flex flex-col justify-center">
-                    <span className="text-[10px] font-bold text-slate-800 truncate block leading-tight">
+                    <span className="text-[10px] font-bold text-slate-900 truncate block leading-tight">
                       {currentSong.name.replace(/\.[^/.]+$/, "")}
                     </span>
-                    <div className="flex justify-between text-[6px] font-mono text-slate-500 leading-none mt-0.5 opacity-80">
-                      <span>{formatTime(Math.floor(audioDuration * (audioProgress / 100)))}</span>
-                      <span>{formatTime(Math.floor(audioDuration))}</span>
+                    <div className="flex justify-between text-[6px] font-mono text-slate-700 leading-none mt-0.5 font-bold">
+                       <span>{formatTime(Math.floor(audioDuration * (audioProgress / 100)))}</span>
+                       <span>{formatTime(Math.floor(audioDuration))}</span>
                     </div>
                   </div>
 
                   {/* Compact Controls */}
                   <div className="flex items-center gap-1.5 shrink-0 px-1">
-                    <button onClick={playPrevSong} className="text-slate-500 hover:text-blue-500 transition-colors">
+                    <button onClick={playPrevSong} className="text-slate-700 hover:text-blue-500 transition-colors">
                       <SkipBack size={11} fill="currentColor" />
                     </button>
                     <button 
                       onClick={togglePlayback}
-                      className="w-5 h-5 flex items-center justify-center bg-white/50 text-slate-700 rounded-full hover:bg-white hover:text-blue-600 transition-all border border-slate-100 shadow-sm"
+                      className="w-5 h-5 flex items-center justify-center bg-white/30 text-slate-800 rounded-full hover:bg-white hover:text-blue-600 transition-all border border-white/40 shadow-sm"
                     >
                       {isPlaying ? <Pause size={9} fill="currentColor" /> : <Play size={9} fill="currentColor" className="translate-x-0.5" />}
                     </button>
-                    <button onClick={playNextSong} className="text-slate-500 hover:text-blue-500 transition-colors">
+                    <button onClick={playNextSong} className="text-slate-700 hover:text-blue-500 transition-colors">
                       <SkipForward size={11} fill="currentColor" />
                     </button>
                   </div>
                </div>
 
                {/* Custom Filled Progress Bar (No Thumb) */}
-               <div className="relative h-1 bg-slate-200/50 backdrop-blur-md">
+               <div className="relative h-1 bg-white/20 backdrop-blur-md">
                   {/* Filled part */}
                   <div 
                     className="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-300 ease-linear shadow-[0_0_8px_rgba(59,130,246,0.5)]"

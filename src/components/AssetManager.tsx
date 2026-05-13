@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, DragEvent } from 'react';
+import { useState, ChangeEvent, DragEvent, useEffect } from 'react';
 import { Upload, Trash2, FileVideo, FileImage, Music, FileAudio, FolderUp } from 'lucide-react';
 import { AppConfig, Asset } from '../types';
 
@@ -11,6 +11,23 @@ export default function AssetManager({ config, onUpdate }: AssetManagerProps) {
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
+
+  // Prevent default browser behavior for drag and drop globally
+  useEffect(() => {
+    const preventDefault = (e: DragEvent) => {
+      e.preventDefault();
+      // Only stop propagation if we are dragging over the window but NOT our drop zone
+      // to allow the drop zone to still handle its own events
+    };
+    
+    window.addEventListener('dragover', preventDefault as any);
+    window.addEventListener('drop', preventDefault as any);
+    
+    return () => {
+      window.removeEventListener('dragover', preventDefault as any);
+      window.removeEventListener('drop', preventDefault as any);
+    };
+  }, []);
 
   // Helper to upload a single file with progress
   const uploadFile = async (file: File): Promise<Asset> => {

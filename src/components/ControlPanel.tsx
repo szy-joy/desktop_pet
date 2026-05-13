@@ -26,19 +26,24 @@ export default function ControlPanel({ config, onSave, onClose }: ControlPanelPr
 
   return (
     <div 
-      className="fixed inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm z-[100] p-4"
-      onMouseEnter={() => {
-        if ((window as any).require) {
-          try {
-            const { ipcRenderer } = (window as any).require('electron');
-            ipcRenderer.send('set-ignore-mouse-events', false, { forward: true });
-          } catch (e) {}
-        }
-      }}
+      className="fixed inset-0 flex items-center justify-center z-[100] p-4 pointer-events-none"
     >
+      {/* Semi-transparent backdrop that doesn't block OS windows */}
       <div 
-        className="bg-slate-50 rounded-xl shadow-2xl overflow-hidden flex flex-col border border-slate-200"
+        className="absolute inset-0 bg-black/10 pointer-events-none" 
+      />
+      
+      <div 
+        className="bg-slate-50 rounded-xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 pointer-events-auto relative"
         style={{ width: 580, height: 600 }}
+        onMouseEnter={() => {
+          if ((window as any).require) {
+            try {
+              const { ipcRenderer } = (window as any).require('electron');
+              ipcRenderer.send('set-ignore-mouse-events', false);
+            } catch (e) {}
+          }
+        }}
       >
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar Tabs */}
@@ -72,7 +77,7 @@ export default function ControlPanel({ config, onSave, onClose }: ControlPanelPr
             <div className="mt-auto border-t border-slate-200">
               <button 
                 onClick={() => {
-                  if (window.confirm('确定要关闭大郎吗？')) {
+                  if (window.confirm('确定要跟小猫拜拜吗？')) {
                     window.close();
                   }
                 }}
