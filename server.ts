@@ -12,10 +12,9 @@ async function startServer() {
   app.use(express.json());
   app.use(cors());
 
-  const baseDataPath = process.env.ELECTRON_USER_DATA_PATH || process.cwd();
-  const userDataPath = path.join(baseDataPath, 'userData');
-  const uploadsPath = path.join(baseDataPath, 'uploads');
-  const songsPath = path.join(process.cwd(), 'songs'); // Songs are bundled with the app usually
+  const userDataPath = path.join(process.cwd(), 'userData');
+  const uploadsPath = path.join(process.cwd(), 'uploads');
+  const songsPath = path.join(process.cwd(), 'songs');
   const configFile = path.join(userDataPath, 'config.json');
 
   if (!fs.existsSync(userDataPath)) fs.mkdirSync(userDataPath);
@@ -224,10 +223,7 @@ async function startServer() {
 
   // File upload
   const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath, { recursive: true });
-      cb(null, uploadsPath);
-    },
+    destination: (req, file, cb) => cb(null, 'uploads/'),
     filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
   });
   const upload = multer({ 
