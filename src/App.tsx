@@ -54,18 +54,27 @@ export default function App() {
     fetchConfig();
   }, [fetchConfig]);
 
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const saveConfig = async (newConfig: AppConfig) => {
+    // Optimistic UI update
     setConfig(newConfig);
-    try {
-      const res = await fetch('/api/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newConfig),
-      });
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    } catch (err) {
-      console.error('Failed to save config:', err);
-    }
+
+    // Debounce actual server save
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newConfig),
+        });
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      } catch (err) {
+        console.error('Failed to save config:', err);
+      }
+    }, 500);
   };
 
   if (loading || !config) {
