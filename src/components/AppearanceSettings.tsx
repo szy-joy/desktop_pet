@@ -20,14 +20,14 @@ export default function AppearanceSettings({ config, onUpdate }: AppearanceSetti
   return (
     <div className="space-y-8">
       <div>
-        <h3 className="text-lg font-bold text-gray-800">外观设置</h3>
-        <p className="text-xs text-gray-500">调整猫猫在桌面上的显示尺寸</p>
+        <h3 className="text-lg font-bold text-gray-800">显示</h3>
+        <p className="text-xs text-gray-500">调整大郎在桌面上的显示尺寸</p>
       </div>
 
       <div className="space-y-6">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-bold text-slate-700">猫猫大小</label>
+            <label className="text-sm font-bold text-slate-700">显示大小</label>
             <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold ring-1 ring-blue-100">
               {config.appearance.size}px
             </span>
@@ -57,7 +57,7 @@ export default function AppearanceSettings({ config, onUpdate }: AppearanceSetti
             💡 小贴士
           </h4>
           <p className="text-[11px] text-slate-600 leading-relaxed">
-            你可以直接拖动猫猫到屏幕的任何位置。右键点击猫猫也可以快速呼出这个控制面板。
+            你可以直接拖动大郎到屏幕的任何位置。右键点击也会快速呼出这个控制面板。
           </p>
         </div>
       </div>

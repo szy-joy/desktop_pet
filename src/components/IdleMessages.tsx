@@ -34,8 +34,8 @@ export default function IdleMessages({ config, onUpdate }: IdleMessagesProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-bold text-gray-800">闲置消息</h3>
-        <p className="text-xs text-gray-500">猫猫会在待机每隔 15-35 秒随机说出的话</p>
+        <h3 className="text-lg font-bold text-gray-800">互动台词</h3>
+        <p className="text-xs text-gray-500">大郎会在闲置时随机说出的话</p>
       </div>
 
       <div className="flex gap-2">

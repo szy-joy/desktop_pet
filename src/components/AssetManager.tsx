@@ -1,5 +1,5 @@
-import { useState, ChangeEvent } from 'react';
-import { Upload, Trash2, CheckCircle2, FileVideo, FileImage, Plus } from 'lucide-react';
+import { useState, ChangeEvent, DragEvent } from 'react';
+import { Upload, Trash2, FileVideo, FileImage, Music, FileAudio, FolderUp } from 'lucide-react';
 import { AppConfig, Asset } from '../types';
 
 interface AssetManagerProps {
@@ -9,56 +9,136 @@ interface AssetManagerProps {
 
 export default function AssetManager({ config, onUpdate }: AssetManagerProps) {
   const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
 
-  const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Helper to upload a single file with progress
+  const uploadFile = async (file: File): Promise<Asset> => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const formData = new FormData();
+      formData.append('file', file);
 
-    setUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
+      // Track progress
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          setUploadProgress(prev => ({ ...prev, [file.name]: percent }));
+        }
       });
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ error: 'Unknown server error' }));
-        throw new Error(errorData.error || `Upload failed with status ${res.status}`);
-      }
-
-      let data: any;
-      const contentType = res.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        data = await res.json();
-      } else {
-        const text = await res.text();
-        console.error('Non-JSON response received:', text);
-        if (text.includes('Cookie check')) {
-          throw new Error('检测到环境认证问题。请刷新预览窗口，或在工具栏中点击“刷新”按钮。');
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              const type = file.type.startsWith('video') ? 'video' : 
+                           file.type.startsWith('audio') ? 'audio' : 'image';
+              
+              resolve({
+                id: (Date.now() + Math.random()).toString(),
+                name: file.name,
+                url: data.url,
+                type: type
+              });
+            } catch (e) {
+              reject(new Error('服务器解析错误'));
+            }
+          } else {
+            reject(new Error(`上传失败 (${xhr.status})`));
+          }
         }
-        throw new Error(`服务器返回了非 JSON 响应 (${res.status})。请检查服务器状态。`);
-      }
-
-      const newAsset: Asset = {
-        id: Date.now().toString(),
-        name: file.name,
-        url: data.url,
-        type: file.type.startsWith('video') ? 'video' : 'image'
       };
+
+      xhr.open('POST', '/api/upload', true);
+      xhr.send(formData);
+    });
+  };
+
+  const processFiles = async (files: File[]) => {
+    if (files.length === 0) return;
+    
+    // Limit to 5 files as requested
+    const filesToUpload = files.slice(0, 5);
+    if (files.length > 5) {
+      alert('单次最多允许上传 5 个素材，已为您自动选择前 5 个');
+    }
+
+    setUploading(true);
+    setUploadProgress({}); // Reset progress
+    try {
+      const uploadPromises = filesToUpload.map(file => uploadFile(file));
+      const newAssets = await Promise.all(uploadPromises);
 
       onUpdate({
         ...config,
-        assets: [...config.assets, newAsset]
+        assets: [...config.assets, ...newAssets]
       });
     } catch (err: any) {
       console.error('Upload failed:', err);
-      alert(err.message || '上传失败，请重试');
+      alert(err.message || '部分或全部素材上传失败，请重试');
     } finally {
       setUploading(false);
+      setUploadProgress({}); // Clear after finish
     }
+  };
+
+  const handleUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []) as File[];
+    processFiles(files);
+    // Reset input
+    e.target.value = '';
+  };
+
+  // Folder support logic
+  const getFilesFromEntry = async (entry: any): Promise<File[]> => {
+    if (entry.isFile) {
+      return new Promise<File[]>((resolve) => {
+        entry.file((file: File) => resolve([file]));
+      });
+    } else if (entry.isDirectory) {
+      const reader = entry.createReader();
+      const entries: any[] = await new Promise<any[]>((resolve) => {
+        reader.readEntries((results: any[]) => resolve(results));
+      });
+      const filesArr = await Promise.all(entries.map(e => getFilesFromEntry(e)));
+      return (filesArr as File[][]).flat();
+    }
+    return [];
+  };
+
+  const handleDrop = async (e: DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (uploading) return;
+
+    const items = Array.from(e.dataTransfer.items);
+    const entries = items.map(item => (item as any).webkitGetAsEntry()).filter(entry => entry !== null);
+    
+    const allFiles: File[] = [];
+    for (const entry of entries) {
+      const files = await getFilesFromEntry(entry);
+      allFiles.push(...files);
+    }
+
+    // Filter by type
+    const validFiles = allFiles.filter(f => 
+      f.type.startsWith('image/') || 
+      f.type.startsWith('video/') || 
+      f.type.startsWith('audio/')
+    );
+
+    processFiles(validFiles);
+  };
+
+  const handleDragOver = (e: DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
   };
 
   const deleteAsset = (id: string) => {
@@ -69,7 +149,12 @@ export default function AssetManager({ config, onUpdate }: AssetManagerProps) {
       newCurrent = newAssets.length > 0 ? newAssets[0].id : '';
     }
     
-    onUpdate({ ...config, assets: newAssets, currentAssetId: newCurrent });
+    const newButtons = config.buttons.map(b => ({
+      ...b,
+      assetIds: b.assetIds?.filter(aid => aid !== id) || []
+    }));
+    
+    onUpdate({ ...config, assets: newAssets, currentAssetId: newCurrent, buttons: newButtons });
   };
 
   return (
@@ -77,21 +162,68 @@ export default function AssetManager({ config, onUpdate }: AssetManagerProps) {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-bold text-gray-800">素材库</h3>
-          <p className="text-xs text-gray-500">上传 WebP, GIF, MP4 等素材</p>
+          <p className="text-xs text-gray-500">上传 WebP, GIF, MP4, MP3 等 (单次最多5个)</p>
         </div>
-        <label className={`
-          flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-all font-medium text-sm
-          ${uploading ? 'opacity-50 cursor-not-allowed' : ''}
-        `}>
-          <Upload size={16} />
-          {uploading ? '正在上传...' : '上传素材'}
-          <input type="file" className="hidden" onChange={handleUpload} disabled={uploading} accept="image/*,video/*" />
-        </label>
+      </div>
+
+      {/* Upload Zone */}
+      <div 
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        className={`
+          relative border-2 border-dashed rounded-xl p-8 transition-all flex flex-col items-center justify-center gap-3
+          ${isDragging ? 'border-blue-500 bg-blue-50 scale-[1.02]' : 'border-slate-200 bg-slate-50/50'}
+          ${uploading ? 'opacity-50 pointer-events-none' : 'cursor-pointer hover:border-blue-400 hover:bg-slate-50'}
+        `}
+      >
+        <div className={`p-4 rounded-full ${isDragging ? 'bg-blue-100 text-blue-600' : 'bg-white text-slate-400'} shadow-sm transition-colors`}>
+          {isDragging ? <FolderUp size={32} /> : <Upload size={32} />}
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-bold text-slate-700">
+            {uploading ? '正在处理素材...' : '点击或拖拽文件/文件夹到此处'}
+          </p>
+          <p className="text-xs text-slate-400 mt-1">支持多选和文件夹，单次最多 5 个</p>
+        </div>
+
+        {/* Progress Display */}
+        {uploading && Object.keys(uploadProgress).length > 0 && (
+          <div className="absolute inset-x-0 bottom-0 p-4 bg-white/80 backdrop-blur-sm border-t border-blue-100 animate-in slide-in-from-bottom-2 duration-300">
+            <div className="max-w-xs mx-auto space-y-2">
+              {Object.entries(uploadProgress).map(([name, progress]) => (
+                <div key={name} className="space-y-1">
+                  <div className="flex justify-between text-[10px] font-bold">
+                    <span className="text-slate-600 truncate max-w-[150px]">{name}</span>
+                    <span className="text-blue-600">{progress}%</span>
+                  </div>
+                  <div className="h-1 bg-slate-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-blue-500 transition-all duration-300 ease-out" 
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <input 
+          type="file" 
+          className="absolute inset-0 opacity-0 cursor-pointer" 
+          onChange={handleUpload} 
+          disabled={uploading} 
+          multiple
+          accept="image/*,video/*,audio/*" 
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         {config.assets.map(asset => {
           const isActive = config.currentAssetId === asset.id;
+          const isAudio = asset.type === 'audio';
+
           return (
             <div 
               key={asset.id}
@@ -100,22 +232,27 @@ export default function AssetManager({ config, onUpdate }: AssetManagerProps) {
                 ${isActive ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-200 hover:border-slate-300'}
               `}
             >
-              {/* Preview */}
               <div 
                 className="flex-1 overflow-hidden cursor-pointer"
-                onClick={() => onUpdate({ ...config, currentAssetId: asset.id })}
+                onClick={() => asset.type !== 'audio' && onUpdate({ ...config, currentAssetId: asset.id })}
               >
                 {asset.type === 'video' ? (
                   <video src={asset.url} className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110" loop muted />
+                ) : asset.type === 'audio' ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 gap-2">
+                    <Music size={48} className="text-slate-300 group-hover:text-blue-400 transition-colors" />
+                    <audio src={asset.url} controls className="w-[80%] h-6 scale-75 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
                 ) : (
                   <img src={asset.url} alt={asset.name} className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110" referrerPolicy="no-referrer" />
                 )}
               </div>
 
-              {/* Info Bar */}
               <div className="px-3 py-2 flex items-center justify-between border-t border-slate-100 bg-white">
                 <div className="flex items-center gap-2 min-w-0">
-                  {asset.type === 'video' ? <FileVideo size={14} className="text-slate-400 shrink-0" /> : <FileImage size={14} className="text-slate-400 shrink-0" />}
+                  {asset.type === 'video' ? <FileVideo size={14} className="text-slate-400 shrink-0" /> : 
+                   asset.type === 'audio' ? <FileAudio size={14} className="text-slate-400 shrink-0" /> :
+                   <FileImage size={14} className="text-slate-400 shrink-0" />}
                   <span className="text-xs truncate font-semibold text-slate-700">{asset.name}</span>
                 </div>
                 <div className="flex items-center gap-1">
@@ -123,12 +260,14 @@ export default function AssetManager({ config, onUpdate }: AssetManagerProps) {
                     <span className="text-blue-500 text-[10px] font-bold uppercase">Active</span>
                   ) : (
                     <div className="flex gap-1">
-                        <button 
-                            onClick={() => onUpdate({ ...config, currentAssetId: asset.id })}
-                            className="p-1 hover:bg-blue-50 text-slate-400 hover:text-blue-500 rounded"
-                        >
-                            ★
-                        </button>
+                        {!isAudio && (
+                          <button 
+                              onClick={() => onUpdate({ ...config, currentAssetId: asset.id })}
+                              className="p-1 hover:bg-blue-50 text-slate-400 hover:text-blue-500 rounded"
+                          >
+                              ★
+                          </button>
+                        )}
                         <button 
                             onClick={() => deleteAsset(asset.id)}
                             className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded"

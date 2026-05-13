@@ -18,10 +18,10 @@ export default function ControlPanel({ config, onSave, onClose }: ControlPanelPr
   const [activeTab, setActiveTab] = useState<TabType>('assets');
 
   const tabs = [
-    { id: 'assets', label: '素材管理', icon: '📂' },
-    { id: 'interactions', label: '交互按钮', icon: '⚡' },
-    { id: 'idle', label: '闲置消息', icon: '💬' },
-    { id: 'appearance', label: '外观设置', icon: '⚙️' },
+    { id: 'assets', label: '素材库', icon: '📁' },
+    { id: 'interactions', label: '交互功能', icon: '👾' },
+    { id: 'idle', label: '互动台词', icon: '💬' },
+    { id: 'appearance', label: '显示', icon: '📺' },
   ];
 
   return (
@@ -38,14 +38,14 @@ export default function ControlPanel({ config, onSave, onClose }: ControlPanelPr
     >
       <div 
         className="bg-slate-50 rounded-xl shadow-2xl overflow-hidden flex flex-col border border-slate-200"
-        style={{ width: 680, height: 700 }}
+        style={{ width: 580, height: 600 }}
       >
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar Tabs */}
-          <div className="w-[180px] bg-slate-100 border-r border-slate-200 py-6 flex flex-col overflow-hidden">
-            <div className="px-6 mb-8 text-left">
-              <div className="text-blue-600 font-bold text-xl tracking-tight italic">NekoDesktop</div>
-              <div className="text-[10px] text-slate-400 uppercase tracking-widest leading-relaxed">v2.4.0 Stable</div>
+          <div className="w-[140px] bg-slate-100 border-r border-slate-200 py-6 flex flex-col overflow-hidden">
+            <div className="px-4 mb-6 text-left shrink-0">
+              <div className="text-blue-600 font-bold text-lg tracking-tight italic">专属巨星</div>
+              <div className="text-[9px] text-slate-400 uppercase tracking-widest">v2.4.0</div>
             </div>
 
             <nav className="flex-1 overflow-y-auto">
@@ -56,14 +56,14 @@ export default function ControlPanel({ config, onSave, onClose }: ControlPanelPr
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as TabType)}
                     className={`
-                      w-full flex items-center gap-3 px-6 py-4 transition-all relative text-sm font-semibold
+                      w-full flex items-center gap-3 px-4 py-3.5 transition-all relative text-sm font-bold
                       ${isActive 
                         ? 'bg-white text-blue-600 border-l-4 border-blue-600 shadow-sm' 
                         : 'text-slate-500 hover:bg-slate-200 hover:text-slate-700'}
                     `}
                   >
-                    <span className="text-lg leading-none">{tab.icon}</span>
-                    <span className="truncate">{tab.label}</span>
+                    <span className="text-base leading-none grayscale-[0.5] shrink-0">{tab.icon}</span>
+                    <span className="whitespace-nowrap">{tab.label}</span>
                   </button>
                 );
               })}
@@ -72,14 +72,14 @@ export default function ControlPanel({ config, onSave, onClose }: ControlPanelPr
             <div className="mt-auto border-t border-slate-200">
               <button 
                 onClick={() => {
-                  if (window.confirm('确定要退出猫猫吗？')) {
+                  if (window.confirm('确定要关闭大郎吗？')) {
                     window.close();
                   }
                 }}
-                className="w-full flex items-center gap-3 px-6 py-4 text-sm font-semibold text-red-500 hover:bg-red-50 transition-all"
+                className="w-full flex items-center gap-3 px-4 py-4 text-sm font-bold text-red-500 hover:bg-red-50 transition-all font-mono"
               >
-                <span className="text-lg leading-none">🚪</span>
-                <span>退出软件</span>
+                <span className="text-base grayscale">🔴</span>
+                <span>关闭应用</span>
               </button>
               <div className="p-4 pt-1 text-[10px] text-slate-400">
                 Connected to: cat-render-engine-v1

@@ -2,7 +2,7 @@ export interface Asset {
   id: string;
   name: string;
   url: string;
-  type: 'image' | 'video';
+  type: 'image' | 'video' | 'audio';
 }
 
 export interface InteractionButton {
@@ -11,7 +11,8 @@ export interface InteractionButton {
   name: string;
   response: string;
   mode: 'text' | 'action';
-  actionAsset: string; // Asset ID or URL
+  assetIds: string[];
+  audioIds?: string[];
   duration: number; // in seconds
 }
 
@@ -23,5 +24,4 @@ export interface AppConfig {
   appearance: {
     size: number;
   };
-  affectionScore: number;
 }

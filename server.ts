@@ -33,21 +33,21 @@ async function startServer() {
     ],
     currentAssetId: 'idle1',
     buttons: [
-      { id: 'eat', emoji: '🍜', name: '吃饭', response: '猫猫吃得真香~', mode: 'action', actionAsset: '吃饭', duration: 8 },
-      { id: 'daze', emoji: '😶', name: '发呆', response: '猫猫正在思考猫生...', mode: 'action', actionAsset: '发呆', duration: 8 },
-      { id: 'sleep', emoji: '😴', name: '睡觉', response: '嘘，猫猫睡着了。', mode: 'action', actionAsset: '睡觉', duration: 8 },
-      { id: 'exercise', emoji: '🤸', name: '做操', response: '猫猫正在努力锻炼！', mode: 'action', actionAsset: '做操', duration: 8 },
-      { id: 'pomodoro', emoji: '⏱️', name: '小猫监工', response: '', mode: 'text', actionAsset: '', duration: 0 },
+      { id: 'eat', emoji: '🍜', name: '吃饭', response: '猫猫吃得真香~', mode: 'action', assetIds: ['eat1', 'eat2'], duration: 8 },
+      { id: 'daze', emoji: '😶', name: '发呆', response: '猫猫正在思考猫生...', mode: 'action', assetIds: ['daze1', 'daze2'], duration: 8 },
+      { id: 'sleep', emoji: '😴', name: '睡觉', response: '嘘，猫猫睡着了。', mode: 'action', assetIds: ['sleep1'], duration: 8 },
+      { id: 'exercise', emoji: '🤸', name: '做操', response: '猫猫正在努力锻炼！', mode: 'action', assetIds: ['exercise1'], duration: 8 },
+      { id: 'sing', emoji: '🎤', name: '唱歌', response: '猫猫开始大灌篮了... 哦不，是大展歌喉！', mode: 'action', assetIds: [], audioIds: [], duration: 0 },
+      { id: 'pomodoro', emoji: '⏱️', name: '小猫监工', response: '', mode: 'text', assetIds: [], duration: 0 },
     ],
     idleMessages: ['喵~ 肚子饿了', '该铲屎了', '今天天气不错', '想睡觉了...', '要记得多喝水哦', '工作辛苦啦'],
     appearance: {
       size: 260
-    },
-    affectionScore: 20
+    }
   };
 
   // Helper to detect if we should force update old configs (versioning)
-  const CONFIG_VERSION = 4;
+  const CONFIG_VERSION = 8;
   const configVersionFile = path.join(userDataPath, 'version.json');
   
   if (fs.existsSync(configFile)) {
@@ -61,14 +61,26 @@ async function startServer() {
       console.log(`Detected old config version (${currentVersion}), updating to ${CONFIG_VERSION}...`);
       const existingConfig = JSON.parse(fs.readFileSync(configFile, 'utf-8'));
       
-      // Force update assets and buttons to the new GIF-based defaults
-      existingConfig.assets = defaultConfig.assets;
-      existingConfig.buttons = defaultConfig.buttons;
-      existingConfig.currentAssetId = defaultConfig.currentAssetId;
+      // Force update assets and buttons if coming from old versions
+      if (currentVersion < 7) { 
+        existingConfig.assets = defaultConfig.assets;
+        
+        // Ensure buttons have audioIds
+        existingConfig.buttons = existingConfig.buttons.map((b: any) => ({
+          ...b,
+          audioIds: b.audioIds || []
+        }));
 
-      // Add affectionScore if missing
-      if (existingConfig.affectionScore === undefined) {
-        existingConfig.affectionScore = 20;
+        // Add sing if missing
+        const hasSing = existingConfig.buttons.some((b: any) => b.id === 'sing');
+        if (!hasSing) {
+          existingConfig.buttons.splice(4, 0, defaultConfig.buttons[4]);
+        } else {
+          // Update sing duration to 0 for infinite
+          existingConfig.buttons = existingConfig.buttons.map((b: any) => 
+            b.id === 'sing' ? { ...b, duration: 0 } : b
+          );
+        }
       }
 
       fs.writeFileSync(configFile, JSON.stringify(existingConfig, null, 2));
