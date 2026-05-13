@@ -168,13 +168,44 @@ async function startServer() {
   // Get config
   app.get('/api/config', (req, res) => {
     try {
+      let config;
       if (!fs.existsSync(configFile)) {
-        return res.json(defaultConfig);
+        config = { ...defaultConfig };
+      } else {
+        config = JSON.parse(fs.readFileSync(configFile, 'utf-8'));
       }
-      const config = JSON.parse(fs.readFileSync(configFile, 'utf-8'));
+
+      // Dynamic sync: Ensure all current local songs are in assets
+      const latestLocalSongs = getSongsFromLocal();
+      const existingAssetUrls = new Set(config.assets.map((a: any) => a.url));
+      let changed = false;
+
+      latestLocalSongs.forEach(song => {
+        if (!existingAssetUrls.has(song.url)) {
+          config.assets.push(song);
+          changed = true;
+          
+          // Also auto-add to sing button if it's a new discovery
+          config.buttons = config.buttons.map((b: any) => {
+            if (b.id === 'sing') {
+              const audioIds = b.audioIds || [];
+              if (!audioIds.includes(song.id)) {
+                audioIds.push(song.id);
+              }
+              return { ...b, audioIds };
+            }
+            return b;
+          });
+        }
+      });
+
+      if (changed) {
+        fs.writeFileSync(configFile, JSON.stringify(config, null, 2));
+      }
+
       res.json(config);
     } catch (err) {
-      console.error('Error reading config:', err);
+      console.error('Error reading/syncing config:', err);
       res.status(500).json({ error: 'Failed to read config' });
     }
   });
