@@ -22,14 +22,21 @@ async function startServer() {
   // Default config
   const defaultConfig = {
     assets: [
-      { id: 'default', name: '猫猫沙发', url: 'https://www.cdc.gov/healthy-pets/media/images/2024/04/Cat-on-couch.jpg', type: 'image' }
+      { id: 'idle1', name: '常规1', url: '/gif/常规1.gif', type: 'image' },
+      { id: 'idle2', name: '常规2', url: '/gif/常规2.gif', type: 'image' },
+      { id: 'eat1', name: '吃饭1', url: '/gif/吃饭1.gif', type: 'image' },
+      { id: 'eat2', name: '吃饭2', url: '/gif/吃饭2.gif', type: 'image' },
+      { id: 'daze1', name: '发呆1', url: '/gif/发呆1.gif', type: 'image' },
+      { id: 'daze2', name: '发呆2', url: '/gif/发呆2.gif', type: 'image' },
+      { id: 'sleep1', name: '睡觉', url: '/gif/睡觉.gif', type: 'image' },
+      { id: 'exercise1', name: '做操', url: '/gif/做操.gif', type: 'image' },
     ],
-    currentAssetId: 'default',
+    currentAssetId: 'idle1',
     buttons: [
-      { id: 'eat', emoji: '🍜', name: '吃饭', response: '猫猫吃得真香~', mode: 'text', actionAsset: '', duration: 2 },
-      { id: 'daze', emoji: '😶', name: '发呆', response: '猫猫正在思考猫生...', mode: 'text', actionAsset: '', duration: 3 },
-      { id: 'sleep', emoji: '😴', name: '睡觉', response: '嘘，猫猫睡着了。', mode: 'text', actionAsset: '', duration: 5 },
-      { id: 'exercise', emoji: '🤸', name: '做操', response: '猫猫正在努力锻炼！', mode: 'text', actionAsset: '', duration: 2 },
+      { id: 'eat', emoji: '🍜', name: '吃饭', response: '猫猫吃得真香~', mode: 'action', actionAsset: '吃饭', duration: 8 },
+      { id: 'daze', emoji: '😶', name: '发呆', response: '猫猫正在思考猫生...', mode: 'action', actionAsset: '发呆', duration: 8 },
+      { id: 'sleep', emoji: '😴', name: '睡觉', response: '嘘，猫猫睡着了。', mode: 'action', actionAsset: '睡觉', duration: 8 },
+      { id: 'exercise', emoji: '🤸', name: '做操', response: '猫猫正在努力锻炼！', mode: 'action', actionAsset: '做操', duration: 8 },
       { id: 'pomodoro', emoji: '⏱️', name: '小猫监工', response: '', mode: 'text', actionAsset: '', duration: 0 },
     ],
     idleMessages: ['喵~ 肚子饿了', '该铲屎了', '今天天气不错', '想睡觉了...', '要记得多喝水哦', '工作辛苦啦'],
@@ -40,7 +47,7 @@ async function startServer() {
   };
 
   // Helper to detect if we should force update old configs (versioning)
-  const CONFIG_VERSION = 3;
+  const CONFIG_VERSION = 4;
   const configVersionFile = path.join(userDataPath, 'version.json');
   
   if (fs.existsSync(configFile)) {
@@ -51,14 +58,13 @@ async function startServer() {
     }
 
     if (currentVersion < CONFIG_VERSION) {
-      console.log('Detected old config version, updating defaults...');
+      console.log(`Detected old config version (${currentVersion}), updating to ${CONFIG_VERSION}...`);
       const existingConfig = JSON.parse(fs.readFileSync(configFile, 'utf-8'));
       
-      // Update buttons if they were using old version 1 defaults
-      const isOriginalButtons = existingConfig.buttons?.length === 2 && existingConfig.buttons[0]?.id === 'pet';
-      if (isOriginalButtons) {
-        existingConfig.buttons = defaultConfig.buttons;
-      }
+      // Force update assets and buttons to the new GIF-based defaults
+      existingConfig.assets = defaultConfig.assets;
+      existingConfig.buttons = defaultConfig.buttons;
+      existingConfig.currentAssetId = defaultConfig.currentAssetId;
 
       // Add affectionScore if missing
       if (existingConfig.affectionScore === undefined) {
@@ -155,6 +161,7 @@ async function startServer() {
   });
 
   // Static uploads
+  app.use('/gif', express.static(path.join(process.cwd(), 'gif')));
   app.use('/uploads', express.static(uploadsPath));
 
   // Vite middleware

@@ -65,7 +65,30 @@ export default function DesktopPet({ config, onOpenPanel, onUpdateConfig, isPane
   }, [config.appearance.size]);
 
   const bubbleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const idleIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const idleMsgTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const idleAssetTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Randomly pick an idle asset ("常规") every 10-20 seconds if not busy
+  useEffect(() => {
+    if (currentAssetOverride || pomodoroTime > 0) return;
+
+    const changeIdleAsset = () => {
+      const wait = Math.floor(Math.random() * (20000 - 10000) + 10000);
+      idleAssetTimeoutRef.current = setTimeout(() => {
+        const idleAssets = config.assets.filter(a => a.name.includes('常规'));
+        if (idleAssets.length > 0) {
+          const randomAsset = idleAssets[Math.floor(Math.random() * idleAssets.length)];
+          setCurrentAssetOverride(randomAsset.id);
+        }
+        changeIdleAsset();
+      }, wait);
+    };
+
+    changeIdleAsset();
+    return () => {
+      if (idleAssetTimeoutRef.current) clearTimeout(idleAssetTimeoutRef.current);
+    };
+  }, [config.assets, currentAssetOverride, pomodoroTime]);
 
   const currentAsset = config.assets.find(a => a.id === (currentAssetOverride || config.currentAssetId)) || config.assets[0];
 
@@ -80,7 +103,7 @@ export default function DesktopPet({ config, onOpenPanel, onUpdateConfig, isPane
   useEffect(() => {
     const setNextIdle = () => {
       const wait = Math.floor(Math.random() * (35000 - 15000) + 15000);
-      idleIntervalRef.current = setTimeout(() => {
+      idleMsgTimeoutRef.current = setTimeout(() => {
         if (config.idleMessages.length > 0 && pomodoroTime === 0) {
           const msg = config.idleMessages[Math.floor(Math.random() * config.idleMessages.length)];
           showBubble(msg);
@@ -91,7 +114,7 @@ export default function DesktopPet({ config, onOpenPanel, onUpdateConfig, isPane
 
     setNextIdle();
     return () => {
-      if (idleIntervalRef.current) clearTimeout(idleIntervalRef.current);
+      if (idleMsgTimeoutRef.current) clearTimeout(idleMsgTimeoutRef.current);
     };
   }, [config.idleMessages, pomodoroTime]);
 
@@ -162,8 +185,13 @@ export default function DesktopPet({ config, onOpenPanel, onUpdateConfig, isPane
 
     showBubble(btn.response);
     if (btn.mode === 'action' && btn.actionAsset) {
-      setCurrentAssetOverride(btn.actionAsset);
-      setTimeout(() => setCurrentAssetOverride(null), btn.duration * 1000);
+      // Find all assets that match the action name (e.g. "吃饭" matches "吃饭1", "吃饭2")
+      const matchingAssets = config.assets.filter(a => a.name.includes(btn.actionAsset));
+      if (matchingAssets.length > 0) {
+        const randomAsset = matchingAssets[Math.floor(Math.random() * matchingAssets.length)];
+        setCurrentAssetOverride(randomAsset.id);
+        setTimeout(() => setCurrentAssetOverride(null), btn.duration * 1000);
+      }
     }
   };
 
