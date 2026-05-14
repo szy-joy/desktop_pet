@@ -49,7 +49,6 @@ async function startServer() {
       { id: 'eat1', name: '吃饭1', url: '/gif/吃饭1.gif', type: 'image' },
       { id: 'eat2', name: '吃饭2', url: '/gif/吃饭2.gif', type: 'image' },
       { id: 'daze1', name: '发呆1', url: '/gif/发呆1.gif', type: 'image' },
-      { id: 'daze2', name: '发呆2', url: '/gif/发呆2.gif', type: 'image' },
       { id: 'sleep1', name: '睡觉', url: '/gif/睡觉1.gif', type: 'image' },
       { id: 'exercise1', name: '做操', url: '/gif/做操.gif', type: 'image' },
       ...localSongs
@@ -57,7 +56,7 @@ async function startServer() {
     currentAssetId: 'idle1',
     buttons: [
       { id: 'eat', emoji: '🍜', name: '吃饭', response: '猫猫吃得真香~', mode: 'action', assetIds: ['eat1', 'eat2'], duration: 8 },
-      { id: 'daze', emoji: '😶', name: '发呆', response: '你要允许有一些人，有安静的青春。', mode: 'action', assetIds: ['daze1', 'daze2'], duration: 8 },
+      { id: 'daze', emoji: '😶', name: '发呆', response: '你要允许有一些人，有安静的青春。', mode: 'action', assetIds: ['daze1'], duration: 8 },
       { id: 'sleep', emoji: '😴', name: '睡觉', response: '嘘，猫猫睡着了。', mode: 'action', assetIds: ['sleep1'], duration: 8 },
       { id: 'exercise', emoji: '🤸', name: '做操', response: '猫猫正在努力锻炼！', mode: 'action', assetIds: ['exercise1'], duration: 8 },
       { id: 'sing', emoji: '🎤', name: '唱歌', response: '下面我要骄傲的往前走了', mode: 'action', assetIds: [], audioIds: localSongs.map(s => s.id), duration: 0 },
@@ -83,7 +82,7 @@ async function startServer() {
   };
 
   // Helper to detect if we should force update old configs (versioning)
-  const CONFIG_VERSION = 11;
+  const CONFIG_VERSION = 12;
   const configVersionFile = path.join(userDataPath, 'version.json');
   
   if (fs.existsSync(configFile)) {
@@ -164,6 +163,14 @@ async function startServer() {
       if (currentVersion < 11) {
         existingConfig.assets = (existingConfig.assets || []).map((a: any) => 
           a.id === 'sleep1' ? { ...a, url: '/gif/睡觉1.gif' } : a
+        );
+      }
+
+      // v12 migration: remove daze2 and update daze button
+      if (currentVersion < 12) {
+        existingConfig.assets = (existingConfig.assets || []).filter((a: any) => a.id !== 'daze2');
+        existingConfig.buttons = (existingConfig.buttons || []).map((b: any) => 
+          b.id === 'daze' ? { ...b, assetIds: ['daze1'] } : b
         );
       }
 
