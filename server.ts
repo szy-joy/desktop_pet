@@ -57,17 +57,29 @@ async function startServer() {
     currentAssetId: 'idle1',
     buttons: [
       { id: 'eat', emoji: '🍜', name: '吃饭', response: '猫猫吃得真香~', mode: 'action', assetIds: ['eat1', 'eat2'], duration: 8 },
-      { id: 'daze', emoji: '😶', name: '发呆', response: '猫猫正在思考猫生...', mode: 'action', assetIds: ['daze1', 'daze2'], duration: 8 },
+      { id: 'daze', emoji: '😶', name: '发呆', response: '你要允许有一些人，有安静的青春。', mode: 'action', assetIds: ['daze1', 'daze2'], duration: 8 },
       { id: 'sleep', emoji: '😴', name: '睡觉', response: '嘘，猫猫睡着了。', mode: 'action', assetIds: ['sleep1'], duration: 8 },
       { id: 'exercise', emoji: '🤸', name: '做操', response: '猫猫正在努力锻炼！', mode: 'action', assetIds: ['exercise1'], duration: 8 },
-      { id: 'sing', emoji: '🎤', name: '唱歌', response: '猫猫开始大灌篮了... 哦不，是大展歌喉！', mode: 'action', assetIds: [], audioIds: localSongs.map(s => s.id), duration: 0 },
-      { id: 'pomodoro', emoji: '⏱️', name: '小猫监工', response: '', mode: 'text', assetIds: [], duration: 0 },
+      { id: 'sing', emoji: '🎤', name: '唱歌', response: '下面我要骄傲的往前走了', mode: 'action', assetIds: [], audioIds: localSongs.map(s => s.id), duration: 0 },
+      { id: 'pomodoro', emoji: '⏱️', name: '巨星监工', response: '', mode: 'text', assetIds: [], duration: 0 },
     ],
-    idleMessages: ['喵~ 肚子饿了', '该铲屎了', '今天天气不错', '想睡觉了...', '要记得多喝水哦', '工作辛苦啦'],
+    idleMessages: [
+      "肚子饿了",
+      "今天天气不错",
+      "想睡觉了...",
+      "要记得多喝水哦",
+      "工作辛苦啦",
+      "祝我们大家都能到自己想去的地方",
+      "不幸福的时候，坚持一下过两天就幸福了。",
+      "赚钱不快乐，花钱才快乐",
+      "希望你今天是你想要成为的人。",
+      "天意让我拥有今生的你",
+      "如果光已忘了要将前方照亮，你会握着我的手吗？"
+    ],
     appearance: {
       size: 260
     },
-    petName: '小猫'
+    petName: '巨星'
   };
 
   // Helper to detect if we should force update old configs (versioning)

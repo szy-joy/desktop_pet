@@ -1,5 +1,5 @@
 import { useState, ChangeEvent, DragEvent, useEffect } from 'react';
-import { Upload, Trash2, FileVideo, FileImage, Music, FileAudio, FolderUp } from 'lucide-react';
+import { Upload, Trash2, FileVideo, FileImage, Music, FileAudio } from 'lucide-react';
 import { AppConfig, Asset } from '../types';
 
 interface AssetManagerProps {
@@ -107,39 +107,15 @@ export default function AssetManager({ config, onUpdate }: AssetManagerProps) {
     e.target.value = '';
   };
 
-  // Folder support logic
-  const getFilesFromEntry = async (entry: any): Promise<File[]> => {
-    if (entry.isFile) {
-      return new Promise<File[]>((resolve) => {
-        entry.file((file: File) => resolve([file]));
-      });
-    } else if (entry.isDirectory) {
-      const reader = entry.createReader();
-      const entries: any[] = await new Promise<any[]>((resolve) => {
-        reader.readEntries((results: any[]) => resolve(results));
-      });
-      const filesArr = await Promise.all(entries.map(e => getFilesFromEntry(e)));
-      return (filesArr as File[][]).flat();
-    }
-    return [];
-  };
-
   const handleDrop = async (e: DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     if (uploading) return;
 
-    const items = Array.from(e.dataTransfer.items);
-    const entries = items.map(item => (item as any).webkitGetAsEntry()).filter(entry => entry !== null);
+    const files = Array.from(e.dataTransfer.files || []) as File[];
     
-    const allFiles: File[] = [];
-    for (const entry of entries) {
-      const files = await getFilesFromEntry(entry);
-      allFiles.push(...files);
-    }
-
-    // Filter by type
-    const validFiles = allFiles.filter(f => 
+    // Filter out directories (directories usually have no type and size 0 or are filtered by browser)
+    const validFiles = files.filter(f => 
       f.type.startsWith('image/') || 
       f.type.startsWith('video/') || 
       f.type.startsWith('audio/')
@@ -195,13 +171,13 @@ export default function AssetManager({ config, onUpdate }: AssetManagerProps) {
         `}
       >
         <div className={`p-4 rounded-full ${isDragging ? 'bg-blue-100 text-blue-600' : 'bg-white text-slate-400'} shadow-sm transition-colors`}>
-          {isDragging ? <FolderUp size={32} /> : <Upload size={32} />}
+          <Upload size={32} />
         </div>
         <div className="text-center">
           <p className="text-sm font-bold text-slate-700">
-            {uploading ? '正在处理素材...' : '点击或拖拽文件/文件夹到此处'}
+            {uploading ? '正在处理素材...' : '点击或拖拽文件到此处'}
           </p>
-          <p className="text-xs text-slate-400 mt-1">支持多选和文件夹，单次最多 5 个</p>
+          <p className="text-xs text-slate-400 mt-1">支持多选，单次最多 5 个</p>
         </div>
 
         {/* Progress Display */}

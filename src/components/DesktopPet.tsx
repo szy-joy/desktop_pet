@@ -270,8 +270,12 @@ export default function DesktopPet({ config, onOpenPanel, onUpdateConfig, isPane
     
     setHistory(prev => [...prev, { buttonId: 'click', timestamp: now }]);
 
-    const randomBubble = ["喵呜~", "摸摸头...", "嘿嘿嘿", "看什么看", "你好呀"];
-    showBubble(randomBubble[Math.floor(Math.random() * randomBubble.length)]);
+    if (config.idleMessages.length > 0) {
+      const msg = config.idleMessages[Math.floor(Math.random() * config.idleMessages.length)];
+      showBubble(msg);
+    } else {
+      showBubble("喵呜~");
+    }
   };
 
   const handleInteraction = (btn: InteractionButton) => {
