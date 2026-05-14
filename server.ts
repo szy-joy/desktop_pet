@@ -50,7 +50,7 @@ async function startServer() {
       { id: 'eat2', name: '吃饭2', url: '/gif/吃饭2.gif', type: 'image' },
       { id: 'daze1', name: '发呆1', url: '/gif/发呆1.gif', type: 'image' },
       { id: 'daze2', name: '发呆2', url: '/gif/发呆2.gif', type: 'image' },
-      { id: 'sleep1', name: '睡觉', url: '/gif/睡觉.gif', type: 'image' },
+      { id: 'sleep1', name: '睡觉', url: '/gif/睡觉1.gif', type: 'image' },
       { id: 'exercise1', name: '做操', url: '/gif/做操.gif', type: 'image' },
       ...localSongs
     ],
@@ -83,7 +83,7 @@ async function startServer() {
   };
 
   // Helper to detect if we should force update old configs (versioning)
-  const CONFIG_VERSION = 10;
+  const CONFIG_VERSION = 11;
   const configVersionFile = path.join(userDataPath, 'version.json');
   
   if (fs.existsSync(configFile)) {
@@ -158,6 +158,13 @@ async function startServer() {
           }
           return b;
         });
+      }
+
+      // v11 migration: update sleep1 asset url
+      if (currentVersion < 11) {
+        existingConfig.assets = (existingConfig.assets || []).map((a: any) => 
+          a.id === 'sleep1' ? { ...a, url: '/gif/睡觉1.gif' } : a
+        );
       }
 
       fs.writeFileSync(configFile, JSON.stringify(existingConfig, null, 2));
